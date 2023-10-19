@@ -15,6 +15,7 @@ import { corsOptions } from "./config/corsOptions.js";
 const app = express();
 
 connectDb();
+
 app.use(express.json());
 app.use(cors(corsOptions))
 app.use(cookieParser())
