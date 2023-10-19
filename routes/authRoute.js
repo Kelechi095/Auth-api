@@ -9,6 +9,6 @@ router.route("/login").post(loginUser)
 router.route('/user').get(authenticateUser, setUser)
 router.route('/google').post(loginWithGoogle)
 router.route('/logout').get(logoutUser)
-router.route("/products").get(getProducts)
+router.route("/products").get(authenticateUser, getProducts)
 
 export default router
