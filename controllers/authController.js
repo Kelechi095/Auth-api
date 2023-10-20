@@ -68,7 +68,7 @@ export const loginUser = async (req, res, next) => {
     });
 
     // Send accessToken containing username
-    res.json({ accessToken });
+    res.json({ accessToken, username: validUser.username });
   } catch (error) {
     next(error);
   }
@@ -105,7 +105,7 @@ export const refresh = async (req, res, next) => {
           { expiresIn: "15m" }
         );
 
-        res.json({ accessToken });
+        res.json({ accessToken, username: foundUser.username });
       }
     );
   } catch (err) {
@@ -268,7 +268,7 @@ export const updateUsername = async (req, res, next) => {
     });
 
     // Send accessToken containing username
-    res.json({ accessToken });
+    res.json({ accessToken, username: user.username });
 
     res.status(200).json({ msg: "User details changed successfully" });
   } catch (err) {
