@@ -2,22 +2,27 @@ import jwt from 'jsonwebtoken'
 import User from '../models/userModel.js'
 
 export const authenticateUser = async(req, res, next) => {
-    let token;
+  try {
+    const cookies = req.cookies;
 
-  token = req.cookies.jwt
-  
-  if(token) {
+    if (!cookies?.jwt) return res.status(401).json({ message: "Unauthorized" });
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
-      req.user = await User.findOne({username: decoded.username}).select('-password')
-      next()
+    const refreshToken = cookies.jwt;
 
-    } catch (error) {
-      return res.status(401).json({ msg: 'Not authorized, Invalid token'});
-    }
-  } else {
-    res.status(401).json({msg: 'Not authorized'})
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err) return res.status(403).json({ message: "Forbidden" });
+
+        req.user = await User.findOne({username: decoded.username})
+
+        if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+        next()
+      }
+    );
+  } catch (err) {
+    next(err);
   }
 }
 
