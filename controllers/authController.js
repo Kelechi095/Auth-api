@@ -215,25 +215,11 @@ export const logoutUser = async (req, res) => {
   }
 };
 
-const products = [
-  {
-    id: 1,
-    title: "Rice",
-  },
-  {
-    id: 2,
-    title: "Beans",
-  },
-  {
-    id: 3,
-    title: "Eggs",
-  },
-];
 
-export const getProducts = async (req, res) => {
+export const getProfile = async (req, res) => {
   try {
-    const userx = req.user.username;
-    res.status(200).json({ products, userx });
+    const user = req.user.username;
+    res.status(200).json(user);
   } catch (err) {
     res.status(400).json({ msg: err.message });
   }
