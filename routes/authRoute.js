@@ -1,5 +1,5 @@
 import express from 'express'
-import {getProducts, loginUser, loginWithGoogle, logoutUser, refresh, registerUser, setUser} from '../controllers/authController.js'
+import {getProducts, loginUser, loginWithGoogle, logoutUser, refresh, registerUser, setUser, updateUsername} from '../controllers/authController.js'
 //import { verifyJWT } from '../middleware/auth.js'
 import { authenticateUser } from '../middleware/auth.js'
 
@@ -12,5 +12,6 @@ router.route('/google').post(loginWithGoogle)
 router.route('/logout').get(logoutUser)
 router.route("/products").get(authenticateUser, getProducts)
 router.route("/refresh").get(refresh)
+router.route("/update").post(updateUsername)
 
 export default router

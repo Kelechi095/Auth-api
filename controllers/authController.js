@@ -131,13 +131,13 @@ export const loginWithGoogle = async (req, res, next) => {
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "5m" }
       );
-  
+
       const refreshToken = jwt.sign(
         { username: user.username },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: "7d" }
       );
-  
+
       // Create secure cookie with refresh token
       res.cookie("jwt", refreshToken, {
         httpOnly: true, //accessible only by web server
@@ -145,7 +145,7 @@ export const loginWithGoogle = async (req, res, next) => {
         sameSite: "None", //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
       });
-  
+
       // Send accessToken containing username
       res.json({ accessToken });
     } else {
@@ -171,13 +171,13 @@ export const loginWithGoogle = async (req, res, next) => {
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "5m" }
       );
-  
+
       const refreshToken = jwt.sign(
         { username: newUser.username },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: "7d" }
       );
-  
+
       // Create secure cookie with refresh token
       res.cookie("jwt", refreshToken, {
         httpOnly: true, //accessible only by web server
@@ -185,7 +185,7 @@ export const loginWithGoogle = async (req, res, next) => {
         sameSite: "None", //cross-site cookie
         maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
       });
-  
+
       // Send accessToken containing username
       res.json({ accessToken });
     }
@@ -206,10 +206,10 @@ export const setUser = async (req, res, next) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    const cookies = req.cookies
-    if (!cookies?.jwt) return res.sendStatus(204) //No content
-    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true })
-    res.json({ message: 'Cookie cleared' })
+    const cookies = req.cookies;
+    if (!cookies?.jwt) return res.sendStatus(204); //No content
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+    res.json({ message: "Cookie cleared" });
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
@@ -232,9 +232,58 @@ const products = [
 
 export const getProducts = async (req, res) => {
   try {
-    const userx = req.user.username
-    res.status(200).json({products, userx});
+    const userx = req.user.username;
+    res.status(200).json({ products, userx });
   } catch (err) {
     res.status(400).json({ msg: err.message });
+  }
+};
+
+export const updateUsername = async (req, res, next) => {
+  try {
+    const { newUsername } = req.body;
+    if (!newUsername)
+      return res.status(200).json({ msg: "Please fill all fields" });
+
+    const user = await User.findOne({ username: req.user.username });
+
+    const alreadyExists = await User.findOne({username: newUsername})
+
+    if(alreadyExists) return res.status(400).json({msg: "Username already taken"})
+
+    user.username = newUsername
+
+    await newUser.save();
+
+    const accessToken = jwt.sign(
+      {
+        UserInfo: {
+          username: user.username,
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "5m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { username: user.username },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Create secure cookie with refresh token
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true, //accessible only by web server
+      secure: true, //https
+      sameSite: "None", //cross-site cookie
+      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+    });
+
+    // Send accessToken containing username
+    res.json({ accessToken });
+
+    res.status(200).json({ msg: "User details changed successfully" });
+  } catch (err) {
+    next(err);
   }
 };
