@@ -1,4 +1,4 @@
-/* import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import User from '../models/userModel.js'
 
 export const authenticateUser = async(req, res, next) => {
@@ -10,7 +10,7 @@ export const authenticateUser = async(req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET)
-      req.user = await User.findById(decoded.userId).select('-password')
+      req.user = await User.findOne({username: decoded.username}).select('-password')
       next()
 
     } catch (error) {
@@ -20,9 +20,8 @@ export const authenticateUser = async(req, res, next) => {
     res.status(401).json({msg: 'Not authorized'})
   }
 }
- */
 
-import jwt from "jsonwebtoken";
+/* import jwt from "jsonwebtoken";
 
 export const verifyJWT = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
@@ -41,3 +40,4 @@ export const verifyJWT = (req, res, next) => {
     next();
   });
 };
+ */
