@@ -67,7 +67,7 @@ export const loginUser = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
     });
 
-    // Send accessToken containing username and roles
+    // Send accessToken containing username
     res.json({ accessToken });
   } catch (error) {
     next(error);
@@ -122,8 +122,32 @@ export const loginWithGoogle = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (user) {
-      generateToken(res, user._id);
-      res.status(200).json(user);
+      const accessToken = jwt.sign(
+        {
+          UserInfo: {
+            username: user.username,
+          },
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "5m" }
+      );
+  
+      const refreshToken = jwt.sign(
+        { username: user.username },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+  
+      // Create secure cookie with refresh token
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true, //accessible only by web server
+        secure: true, //https
+        sameSite: "None", //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      });
+  
+      // Send accessToken containing username
+      res.json({ accessToken });
     } else {
       const generatedPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
@@ -137,8 +161,33 @@ export const loginWithGoogle = async (req, res, next) => {
         profilePicture: req.body.photo,
       });
       await newUser.save();
-      generateToken(res, newUser._id);
-      res.status(200).json(newUser);
+
+      const accessToken = jwt.sign(
+        {
+          UserInfo: {
+            username: newUser.username,
+          },
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "5m" }
+      );
+  
+      const refreshToken = jwt.sign(
+        { username: newUser.username },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+  
+      // Create secure cookie with refresh token
+      res.cookie("jwt", refreshToken, {
+        httpOnly: true, //accessible only by web server
+        secure: true, //https
+        sameSite: "None", //cross-site cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      });
+  
+      // Send accessToken containing username
+      res.json({ accessToken });
     }
   } catch (error) {
     next(error);
