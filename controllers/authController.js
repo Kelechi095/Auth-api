@@ -41,21 +41,86 @@ export const loginUser = async (req, res, next) => {
     const validPassword = bcrypt.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(401, "Wrong credentials"));
 
-    generateToken(res, validUser._id);
+    //generateToken(res, validUser._id);
 
-    res.status(200).json({ msg: "Login successful" });
+    const accessToken = jwt.sign(
+      {
+        UserInfo: {
+          username: validUser.username,
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "5m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { username: validUser.username },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Create secure cookie with refresh token
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true, //accessible only by web server
+      secure: true, //https
+      sameSite: "None", //cross-site cookie
+      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+    });
+
+    // Send accessToken containing username and roles
+    res.json({ accessToken });
   } catch (error) {
     next(error);
   }
 };
 
-export const loginWithGoogle = async (req, res, next) => {
-  const {email, name, photo} = req.body
+export const refresh = async (req, res, next) => {
+  try {
+    const cookies = req.cookies;
 
-  if(!email ||!name || !photo) return res.status(400).json({msg: "Please fill all fields"})
+    if (!cookies?.jwt) return res.status(401).json({ message: "Unauthorized" });
+
+    const refreshToken = cookies.jwt;
+
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err) return res.status(403).json({ message: "Forbidden" });
+
+        const foundUser = await User.findOne({
+          username: decoded.username,
+        }).exec();
+
+        if (!foundUser)
+          return res.status(401).json({ message: "Unauthorized" });
+
+        const accessToken = jwt.sign(
+          {
+            UserInfo: {
+              username: foundUser.username,
+            },
+          },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
+
+        res.json({ accessToken });
+      }
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const loginWithGoogle = async (req, res, next) => {
+  const { email, name, photo } = req.body;
+
+  if (!email || !name || !photo)
+    return res.status(400).json({ msg: "Please fill all fields" });
   try {
     const user = await User.findOne({ email });
-    
+
     if (user) {
       generateToken(res, user._id);
       res.status(200).json(user);
@@ -79,6 +144,7 @@ export const loginWithGoogle = async (req, res, next) => {
     next(error);
   }
 };
+
 export const setUser = async (req, res, next) => {
   try {
     const user = await User.findOne({ _id: req.user._id });
@@ -91,12 +157,10 @@ export const setUser = async (req, res, next) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    res.cookie("jwt", "", {
-      httpOnly: true,
-      expires: new Date(0),
-    });
-
-    res.status(200).json({ msg: "User logged out" });
+    const cookies = req.cookies
+    if (!cookies?.jwt) return res.sendStatus(204) //No content
+    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true })
+    res.json({ message: 'Cookie cleared' })
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
