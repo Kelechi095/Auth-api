@@ -232,7 +232,8 @@ const products = [
 
 export const getProducts = async (req, res) => {
   try {
-    res.status(200).json(products);
+    const userx = req.user.username
+    res.status(200).json({products, userx});
   } catch (err) {
     res.status(400).json({ msg: err.message });
   }
