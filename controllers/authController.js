@@ -231,6 +231,8 @@ export const updateUsername = async (req, res, next) => {
     if (!newUsername)
       return res.status(200).json({ msg: "Please fill all fields" });
 
+      console.log(req.user)
+
     const user = await User.findOne({ username: req.user.username });
 
     const alreadyExists = await User.findOne({username: newUsername})
@@ -239,7 +241,7 @@ export const updateUsername = async (req, res, next) => {
 
     user.username = newUsername
 
-    await newUser.save();
+    await user.save();
 
     const accessToken = jwt.sign(
       {
