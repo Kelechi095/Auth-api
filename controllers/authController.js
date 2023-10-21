@@ -147,7 +147,7 @@ export const loginWithGoogle = async (req, res, next) => {
       });
 
       // Send accessToken containing username
-      res.json({ accessToken });
+      res.json({ accessToken, username: user.username });
     } else {
       const generatedPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
@@ -187,7 +187,7 @@ export const loginWithGoogle = async (req, res, next) => {
       });
 
       // Send accessToken containing username
-      res.json({ accessToken });
+      res.json({ accessToken, username: newUser.username });
     }
   } catch (error) {
     next(error);
