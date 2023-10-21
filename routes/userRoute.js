@@ -1,5 +1,10 @@
 import express from "express";
+import { createPhoto, getPhoto } from "../controllers/userController.js";
+import { authenticateUser } from "../middleware/auth.js";
 
-const router = express.Router()
+const router = express.Router();
 
-export default router
+router.route("/get-photo").get(authenticateUser, getPhoto);
+router.route("/create-photo").post(authenticateUser, createPhoto);
+
+export default router;
