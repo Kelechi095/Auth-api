@@ -16,7 +16,7 @@ const app = express();
 
 connectDb();
 
-app.use(express.json());
+app.use(express.json({limit: "1mb"}));
 app.use(cors(corsOptions))
 app.use(cookieParser())
 app.use(morgan('dev'))
@@ -25,7 +25,7 @@ const __dirname = path.resolve()
 
 app.use("/", express.static(path.join(__dirname, "public")));
 
-//app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
